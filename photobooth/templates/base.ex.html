@@ -1,0 +1,55 @@
+{% from 'bootstrap5/utils.html' import render_messages %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block page_title %}{% endblock %} - {{ site_name }}</title>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0">
+    <meta name="description" content="{{ site_name }} : {{ site_description }}">
+
+    {{ bootstrap.load_css() }}
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    {% block other_head_stuffs %}{% endblock %}
+</head>
+
+<body>
+
+    <div class="container" id="messages-zone">
+        {{ render_messages() }}
+    </div>
+
+    <div id="page-content">
+        {% block page_content %}
+        <div id="content" class="container mt-4 pb-4">
+        {% block content %}{% endblock %}
+        </div>
+        {% endblock %}
+    </div>
+
+    <footer class="container">
+        <div id="bottom-txt" class="mt-2">
+            &copy; {{ site_name }}
+            &bull; Site web par <a href="{{ author_url }}">{{ author_name }}</a>  (version: <a href="{{ repo_url }}/tree/v{{ site_version }}">{{ site_version }}</a>)
+        </div>
+    </footer>
+
+    {% block scripts %}
+        {{ bootstrap.load_js() }}
+        {# add FontAwesome kit if available #}
+        {% if fa_kit != '' %}
+            <script src="https://kit.fontawesome.com/{{ fa_kit }}.js"></script>
+        {% endif %}
+        {% if recaptcha_public_key != '' and not no_tracking %}
+            <script src="https://www.google.com/recaptcha/api.js"></script>
+            <script>
+                function recaptcha_submit(token) {
+                    let form = document.getElementById('newsletter-form');
+                    form.submit();
+                }
+            </script>
+        {% endif %}
+    {% endblock %}
+</body>
+</html>

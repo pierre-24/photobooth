@@ -4,3 +4,4 @@ sqlalchemy-utils
 email_validator
 bootstrap-flask
 Flask-Limiter
+Flask-WTF

@@ -1,0 +1,40 @@
+{% extends "base.ex.html" %}
+
+{% from 'bootstrap5/form.html' import render_form_row %}
+
+{% block page_title %}Formulaire photo{% endblock %}
+
+{% block content %}
+    <h1>Formulaire photo</h1>
+
+    <form action="{{ url_for('main.index') }}" method="post" id="newsletter-form">
+        {{ form.hidden_tag() }}
+        <div class="form-row">
+            {{ render_form_row([form.surname, form.name])  }}
+            {{ render_form_row([form.email])  }}
+            {{ render_form_row([form.id_pic, form.note])  }}
+
+            {{ render_form_row([form.gdpr])  }}
+            <p class="text-secondary">
+                Notez que vos données seront traitées <b>que</b> par l'association Anne-Marie Nihoul (en la personne de Pierre Beaujean) et <b>ne seront pas conservées</b> au delà de l'envoi de la photo, <b>ni partagées</b>.
+            </p>
+
+            {{ render_form_row([form.add_to_newsletter])  }}
+            <p class="text-secondary">
+                Si vous cochez cette case, vous recevrez prochainement un mail de confirmation de votre inscription. Vos données (nom, prénom, adresse e-mail) seront alors conservées aussi longtemps que vous êtes inscrit à notre infolettre (plus d'info <a href="https://annemarienihoul.be/page/15-conditions-generales-d-utilisation-cgu.html">ici</a>).
+            </p>
+
+            {% if recaptcha_public_key != '' and not no_tracking %}
+                <button id="submit_button" name="submit_button" class="btn btn-primary mb-2 g-recaptcha"
+                        data-sitekey="{{ recaptcha_public_key }}"
+                        data-action="submit"
+                        data-callback="recaptcha_submit">
+                    S'inscrire</button>
+            {% else %}
+                <div class="col-md-2">{{ form.submit_button(
+                    class_='btn btn-primary mb-2'
+                ) }}</div>
+            {% endif %}
+        </div>
+    </form>
+{% endblock %}

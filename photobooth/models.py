@@ -29,3 +29,8 @@ class Request(BaseModel):
         o.note = note
 
         return o
+
+    def get_scrambled_email(self):
+        n = len(self.name) % 3
+        s = self.email.split('@')
+        return s[0][:1 + n] + '***' + (s[0][n - 3:] if len(s[0]) >= 4 else '') + '@{}'.format(s[1])

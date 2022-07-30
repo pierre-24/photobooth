@@ -8,12 +8,30 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap5
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import flask_login
+
+from photobooth.filters import filters
 
 from photobooth import settings
 
 db = SQLAlchemy(session_options={'expire_on_commit': False})
 bootstrap = Bootstrap5()
 limiter = Limiter(key_func=get_remote_address)
+login_manager = flask_login.LoginManager()
+
+
+class User(flask_login.UserMixin):
+    def __init__(self, id_):
+        super().__init__()
+        self.id = id_
+
+
+@login_manager.user_loader
+def load_user(login):
+    if login != settings.APP_CONFIG['USERNAME']:
+        return
+
+    return User(login)
 
 
 @click.command('init')
@@ -49,11 +67,18 @@ def create_app():
     bootstrap.init_app(app)
     limiter.init_app(app)
 
+    login_manager.init_app(app)
+    login_manager.login_view = 'admin.login'  # automatic redirection
+
     # add CLI
     app.cli.add_command(init_command)
 
     # add blueprint
-    from photobooth.views import bp
-    app.register_blueprint(bp)
+    from photobooth.views import bp_main, bp_admin
+    app.register_blueprint(bp_main)
+    app.register_blueprint(bp_admin)
+
+    # add filters
+    app.jinja_env.filters.update(**filters)
 
     return app

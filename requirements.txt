@@ -5,3 +5,4 @@ email_validator
 bootstrap-flask
 Flask-Limiter
 Flask-WTF
+Flask-Login

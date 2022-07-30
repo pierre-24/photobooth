@@ -30,6 +30,9 @@ WEBPAGE_INFO = {
     'recaptcha_public_key': ''  # Recaptcha
 }
 
+REQUEST_LIMIT = '10/hour;1 per 5 second'
+LOGIN_LIMIT = '10/hour;1 per 5 second'
+
 # Load the production settings, overwrite the existing ones if needed
 try:
     from settings_prod import *  # noqa

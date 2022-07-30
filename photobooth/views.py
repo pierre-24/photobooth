@@ -1,10 +1,11 @@
-import flask
 from flask.views import View
 from flask import Blueprint
+import flask
 
-from photobooth import settings, forms, models, db
+import flask_login
+from flask_login import login_required
 
-bp = Blueprint('main', __name__, url_prefix='/')
+from photobooth import settings, forms, models, db, limiter, User
 
 
 class RenderTemplateView(View):
@@ -106,9 +107,14 @@ class FormView(RenderTemplateView):
             flask.abort(403)
 
 
+# -- MAIN
+bp_main = Blueprint('main', __name__, url_prefix='/')
+
+
 class IndexView(FormView):
     template_name = 'index.html'
     form_class = forms.MainForm
+    decorators = [limiter.limit(settings.REQUEST_LIMIT)]
 
     def form_valid(self, form):
         print(form.name.data)
@@ -128,4 +134,74 @@ class IndexView(FormView):
         return super().form_valid(form)
 
 
-bp.add_url_rule('/', view_func=IndexView.as_view(name='index'))
+bp_main.add_url_rule('/', view_func=IndexView.as_view(name='index'))
+
+
+# -- ADMIN
+bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
+
+
+class LoginView(FormView):
+    form_class = forms.LoginForm
+    template_name = 'login.html'
+    decorators = [limiter.limit(settings.LOGIN_LIMIT)]
+
+    def get_context_data(self, *args, **kwargs):
+        ctx = super().get_context_data(*args, **kwargs)
+        ctx['next'] = flask.request.args.get('next', '')
+        return ctx
+
+    def dispatch_request(self, *args, **kwargs):
+
+        if flask_login.current_user.is_authenticated:
+            flask.flash('Vous êtes déjà connecté', category='error')
+            return flask.redirect(flask.request.args.get('next', flask.url_for('visitor.index')))
+
+        return super().dispatch_request(*args, **kwargs)
+
+    def form_valid(self, form):
+
+        if form.login.data != settings.APP_CONFIG['USERNAME'] or form.password.data != settings.APP_CONFIG['PASSWORD']:
+            flask.flash('Utilisateur ou mot de passe incorrect', 'error')
+            return self.form_invalid(form)
+
+        flask_login.login_user(User(form.login.data))
+
+        next = form.next.data
+        self.success_url = flask.url_for('admin.index') if next == '' else next
+        return super().form_valid(form)
+
+
+bp_admin.add_url_rule('/login.html', view_func=LoginView.as_view(name='login'))
+
+
+@login_required
+@bp_admin.route('/logout', endpoint='logout')
+def logout():
+    flask_login.logout_user()
+    flask.flash('Vous êtes déconnecté.')
+    return flask.redirect(flask.url_for('main.index'))
+
+
+# -- Index
+class AdminBaseMixin:
+    decorators = [login_required]
+
+
+class AdminIndexView(AdminBaseMixin, RenderTemplateView):
+    template_name = 'admin.html'
+    decorators = [login_required]
+
+    def get_context_data(self, *args, **kwargs):
+        ctx = super().get_context_data(*args, **kwargs)
+
+        req = models.Request.query
+
+        ctx['num_requests'] = req.count()
+        ctx['num_newsletters'] = req.filter(models.Request.add_to_newsletter.is_(True)).count()
+        ctx['requests'] = req.order_by(models.Request.id.desc()).all()
+
+        return ctx
+
+
+bp_admin.add_url_rule('/index.html', view_func=AdminIndexView.as_view(name='index'))

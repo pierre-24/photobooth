@@ -1,0 +1,35 @@
+{% extends "base.ex.html" %}
+
+{% from 'bootstrap5/form.html' import render_form_row %}
+
+{% block page_title %}Administration{% endblock %}
+
+{% block content %}
+    <div class="alert alert-secondary" role="alert">
+        Résultat: <b>{{ num_requests }}</b> demande(s) de photos et <b>{{ num_newsletters }}</b> inscrit(s) à l'infolettre.
+        <a href="{{ url_for('main.index') }}">Retourner au formulaire</a>.
+    </div>
+
+    <table class="table">
+        <tr>
+            <th>#</th>
+            <th>Nom</th>
+            <th>E-mail</th>
+            <th>Quand</th>
+            <th>Photo</th>
+            <th>Note</th>
+            <th>Infolettre ?</th>
+        </tr>
+        {% for req in requests %}
+            <tr>
+                <th scope="row">{{ req.id }}</th>
+                <td>{{ req.surname }} {{ req.name }}</td>
+                <td>{{ req.get_scrambled_email() }}</td>
+                <td>{{ req.date_created|date_formatter }}</td>
+                <td>{{ req.pic_id }}</td>
+                <td>{{ req.note }}</td>
+                <td>{%  if req.add_to_newsletter %}<b>oui</b>{% else %}non{% endif %}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

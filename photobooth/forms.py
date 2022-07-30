@@ -43,3 +43,11 @@ class MainForm(FlaskForm):
     )
 
     submit_button = f.SubmitField("S'inscrire")
+
+
+class LoginForm(FlaskForm):
+    login = f.StringField('Login', validators=[f.validators.InputRequired()])
+    password = f.PasswordField('Mot de passe', validators=[f.validators.InputRequired()])
+    next = f.HiddenField(default='')
+
+    login_button = f.SubmitField('Login')
